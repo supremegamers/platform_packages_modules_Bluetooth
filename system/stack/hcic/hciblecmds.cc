@@ -23,6 +23,8 @@
  *
  ******************************************************************************/
 
+#define LOG_TAG "bt_hciblecmds"
+
 #include <base/functional/bind.h>
 #include <stddef.h>
 #include <string.h>
@@ -33,6 +35,7 @@
 #include "hcimsgs.h"
 #include "internal_include/bt_target.h"
 #include "osi/include/allocator.h"
+#include "osi/include/log.h"
 #include "stack/include/bt_hdr.h"
 #include "stack/include/bt_octets.h"
 #include "stack/include/bt_types.h"
@@ -271,8 +274,8 @@ void btsnd_hcic_ble_rand(base::Callback<void(BT_OCTET8)> cb) {
                             base::Bind(
                                 [](base::Callback<void(BT_OCTET8)> cb,
                                    uint8_t* param, uint16_t param_len) {
-                                  CHECK(param[0] == 0)
-                                      << "LE Rand return status must be zero";
+                                  LOG_WARN(LOG_TAG,
+                                      "LE Rand return status is not zero: %u", param[0]);
                                   cb.Run(param + 1 /* skip status */);
                                 },
                                 std::move(cb)));
