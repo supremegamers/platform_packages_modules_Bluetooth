@@ -1103,11 +1103,15 @@ void bta_dm_sdp_result(tBTA_DM_MSG* p_data) {
     do {
       p_sdp_rec = NULL;
       if (bta_dm_search_cb.service_index == (BTA_USER_SERVICE_ID + 1)) {
-        if (p_sdp_rec && SDP_FindProtocolListElemInRec(
-                             p_sdp_rec, UUID_PROTOCOL_RFCOMM, &pe)) {
+        memset(&pe, 0, sizeof(tSDP_PROTOCOL_ELEM));
+        if (p_sdp_rec && (SDP_FindProtocolListElemInRec(
+                             p_sdp_rec, UUID_PROTOCOL_RFCOMM, &pe))
+                             && (pe.num_params != 0)) {
           bta_dm_search_cb.peer_scn = (uint8_t)pe.params[0];
           scn_found = true;
         }
+        if (pe.num_params == 0)
+          APPL_TRACE_ERROR("%s pe.num_params = 0", __func__);
       } else {
         service =
             bta_service_id_to_uuid_lkup_tbl[bta_dm_search_cb.service_index - 1];

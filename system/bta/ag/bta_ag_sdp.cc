@@ -325,9 +325,11 @@ bool bta_ag_sdp_find_attr(tBTA_AG_SCB* p_scb, tBTA_SERVICE_MASK service) {
         break;
     }
 
+    memset(&pe, 0, sizeof(tSDP_PROTOCOL_ELEM));
     /* get scn from proto desc list if initiator */
     if (p_scb->role == BTA_AG_INT) {
-      if (SDP_FindProtocolListElemInRec(p_rec, UUID_PROTOCOL_RFCOMM, &pe)) {
+      if ((SDP_FindProtocolListElemInRec(p_rec, UUID_PROTOCOL_RFCOMM, &pe))
+         && (pe.num_params != 0)) {
         p_scb->peer_scn = (uint8_t)pe.params[0];
       } else {
         continue;

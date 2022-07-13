@@ -225,7 +225,7 @@ bool bta_hf_client_sdp_find_attr(tBTA_HF_CLIENT_CB* client_cb) {
   bool result = false;
 
   client_cb->peer_version = HFP_VERSION_1_1; /* Default version */
-
+  memset(&pe, 0, sizeof(tSDP_PROTOCOL_ELEM));
   /* loop through all records we found */
   while (true) {
     /* get next record; if none found, we're done */
@@ -237,7 +237,8 @@ bool bta_hf_client_sdp_find_attr(tBTA_HF_CLIENT_CB* client_cb) {
 
     /* get scn from proto desc list if initiator */
     if (client_cb->role == BTA_HF_CLIENT_INT) {
-      if (SDP_FindProtocolListElemInRec(p_rec, UUID_PROTOCOL_RFCOMM, &pe)) {
+      if ((SDP_FindProtocolListElemInRec(p_rec, UUID_PROTOCOL_RFCOMM, &pe))
+          && (pe.num_params != 0)) {
         client_cb->peer_scn = (uint8_t)pe.params[0];
       } else {
         continue;
