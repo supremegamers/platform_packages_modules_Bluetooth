@@ -762,12 +762,14 @@ static void bta_jv_start_discovery_cback(tSDP_RESULT result,
     if (result == SDP_SUCCESS || result == SDP_DB_FULL) {
       tSDP_DISC_REC* p_sdp_rec = NULL;
       tSDP_PROTOCOL_ELEM pe;
+      memset(&pe, 0, sizeof(tSDP_PROTOCOL_ELEM));
       VLOG(2) << __func__ << ": bta_jv_cb.uuid=" << bta_jv_cb.uuid;
       p_sdp_rec = SDP_FindServiceUUIDInDb(p_bta_jv_cfg->p_sdp_db,
                                           bta_jv_cb.uuid, p_sdp_rec);
       VLOG(2) << __func__ << ": p_sdp_rec=" << p_sdp_rec;
       if (p_sdp_rec &&
-          SDP_FindProtocolListElemInRec(p_sdp_rec, UUID_PROTOCOL_RFCOMM, &pe)) {
+          (SDP_FindProtocolListElemInRec(p_sdp_rec, UUID_PROTOCOL_RFCOMM, &pe))
+         && (pe.num_params != 0)) {
         dcomp.scn = (uint8_t)pe.params[0];
         status = BTA_JV_SUCCESS;
       }
