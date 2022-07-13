@@ -100,7 +100,7 @@ void module_shut_down(const module_t* module) {
   CHECK(state <= MODULE_STATE_STARTED);
 
   // Only something to do if the module was actually started
-  if (state < MODULE_STATE_STARTED) return;
+  if (state < MODULE_STATE_STARTED && strcmp(module->name, "hci_module")) return;
 
   LOG_INFO("%s Shutting down module \"%s\"", __func__, module->name);
   if (!call_lifecycle_function(module->shut_down)) {
