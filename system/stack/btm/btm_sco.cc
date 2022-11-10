@@ -142,7 +142,7 @@ static void btm_esco_conn_rsp(uint16_t sco_inx, uint8_t hci_status,
     if (controller_get_interface()
             ->supports_enhanced_setup_synchronous_connection()) {
       /* Use the saved SCO routing */
-      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH;
+      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH_HCI;
 
       BTM_TRACE_DEBUG(
           "%s: txbw 0x%x, rxbw 0x%x, lat 0x%x, retrans 0x%02x, "
@@ -345,7 +345,7 @@ static tBTM_STATUS btm_send_connect_request(uint16_t acl_handle,
       LOG_INFO("Sending enhanced SCO connect request over handle:0x%04x",
                acl_handle);
       /* Use the saved SCO routing */
-      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH;
+      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH_HCI;
       LOG(INFO) << __func__ << std::hex << ": enhanced parameter list"
                 << " txbw=0x" << unsigned(p_setup->transmit_bandwidth)
                 << ", rxbw=0x" << unsigned(p_setup->receive_bandwidth)
@@ -1176,7 +1176,7 @@ static tBTM_STATUS BTM_ChangeEScoLinkParms(uint16_t sco_inx,
     if (controller_get_interface()
             ->supports_enhanced_setup_synchronous_connection()) {
       /* Use the saved SCO routing */
-      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH;
+      p_setup->input_data_path = p_setup->output_data_path = ESCO_DATA_PATH_HCI;
 
       btsnd_hcic_enhanced_set_up_synchronous_connection(p_sco->hci_handle,
                                                         p_setup);
