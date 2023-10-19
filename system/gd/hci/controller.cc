@@ -16,6 +16,7 @@
 
 #include "hci/controller.h"
 
+#include <android-base/strings.h>
 #include <future>
 #include <memory>
 #include <string>
@@ -25,9 +26,13 @@
 #include "hci/hci_layer.h"
 #include "hci_controller_generated.h"
 #include "os/metrics.h"
+#include "os/system_properties.h"
 
 namespace bluetooth {
 namespace hci {
+
+static const char kPropertyDisabledCommands[] =
+    "bluetooth.hci.disabled_commands";
 
 using os::Handler;
 
@@ -260,6 +265,15 @@ struct Controller::impl {
     ErrorCode status = complete_view.GetStatus();
     ASSERT_LOG(status == ErrorCode::SUCCESS, "Status 0x%02hhx, %s", status, ErrorCodeText(status).c_str());
     local_supported_commands_ = complete_view.GetSupportedCommands();
+
+    if (auto disabledCommands = os::GetSystemProperty(kPropertyDisabledCommands)) {
+      for (const auto& command : android::base::Split(*disabledCommands, ",")) {
+        uint16_t index = std::stoi(command);
+        uint16_t byte_index = index / 10;
+        uint16_t bit_index = index % 10;
+        local_supported_commands_[byte_index] &= ~(1 << bit_index);
+      }
+    }
   }
 
   void read_local_extended_features_complete_handler(std::promise<void> promise, CommandCompleteView view) {
@@ -879,27 +893,27 @@ struct Controller::impl {
 
   CompletedAclPacketsCallback acl_credits_callback_{};
   CompletedAclPacketsCallback acl_monitor_credits_callback_{};
-  LocalVersionInformation local_version_information_;
-  std::array<uint8_t, 64> local_supported_commands_;
-  std::vector<uint64_t> extended_lmp_features_array_;
-  uint16_t acl_buffer_length_ = 0;
-  uint16_t acl_buffers_ = 0;
-  uint8_t sco_buffer_length_ = 0;
-  uint16_t sco_buffers_ = 0;
-  Address mac_address_;
-  std::string local_name_;
-  LeBufferSize le_buffer_size_;
-  LeBufferSize iso_buffer_size_;
-  uint64_t le_local_supported_features_;
-  uint64_t le_supported_states_;
-  uint8_t le_connect_list_size_;
-  uint8_t le_resolving_list_size_;
-  LeMaximumDataLength le_maximum_data_length_;
-  uint16_t le_maximum_advertising_data_length_;
-  uint16_t le_suggested_default_data_length_;
-  uint8_t le_number_supported_advertising_sets_;
-  uint8_t le_periodic_advertiser_list_size_;
-  VendorCapabilities vendor_capabilities_;
+  LocalVersionInformation local_version_information_{};
+  std::array<uint8_t, 64> local_supported_commands_{};
+  std::vector<uint64_t> extended_lmp_features_array_{};
+  uint16_t acl_buffer_length_{};
+  uint16_t acl_buffers_{};
+  uint8_t sco_buffer_length_{};
+  uint16_t sco_buffers_{};
+  Address mac_address_{};
+  std::string local_name_{};
+  LeBufferSize le_buffer_size_{};
+  LeBufferSize iso_buffer_size_{};
+  uint64_t le_local_supported_features_{};
+  uint64_t le_supported_states_{};
+  uint8_t le_connect_list_size_{};
+  uint8_t le_resolving_list_size_{};
+  LeMaximumDataLength le_maximum_data_length_{};
+  uint16_t le_maximum_advertising_data_length_{};
+  uint16_t le_suggested_default_data_length_{};
+  uint8_t le_number_supported_advertising_sets_{};
+  uint8_t le_periodic_advertiser_list_size_{};
+  VendorCapabilities vendor_capabilities_{};
 };  // namespace hci
 
 Controller::Controller() : impl_(std::make_unique<impl>(*this)) {}
