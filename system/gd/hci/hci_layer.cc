@@ -56,7 +56,7 @@ static void fail_if_reset_complete_not_success(CommandCompleteView complete) {
 
 static void abort_after_time_out(OpCode op_code) {
   bluetooth::os::LogMetricHciTimeoutEvent(static_cast<uint32_t>(op_code));
-  ASSERT_LOG(false, "Done waiting for debug information after HCI timeout (%s)", OpCodeText(op_code).c_str());
+  LOG_WARN("Done waiting for debug information after HCI timeout (%s)", OpCodeText(op_code).c_str());
 }
 
 class CommandQueueEntry {
