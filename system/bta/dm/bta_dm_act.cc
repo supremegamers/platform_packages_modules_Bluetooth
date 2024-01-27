@@ -160,6 +160,10 @@ static void bta_dm_ctrl_features_rd_cmpl_cback(tHCI_STATUS result);
 #define BTA_DM_SWITCH_DELAY_TIMER_MS 500
 #endif
 
+#ifndef PROPERTY_BLE_VND_SUPPORTED
+#define PROPERTY_BLE_VND_SUPPORTED "bluetooth.core.le.vendor_capabilities.enabled"
+#endif
+
 // Time to wait after receiving shutdown request to delay the actual shutdown
 // process. This time may be zero which invokes immediate shutdown.
 static uint64_t get_DisableDelayTimerInMs() {
@@ -399,9 +403,9 @@ void BTA_dm_on_hw_on() {
 
   BTM_WritePageTimeout(p_bta_dm_cfg->page_timeout);
 
-#if (BLE_VND_INCLUDED == TRUE)
+if (osi_property_get_bool(PROPERTY_BLE_VND_SUPPORTED, true)) {
   BTM_BleReadControllerFeatures(bta_dm_ctrl_features_rd_cmpl_cback);
-#else
+} else {
   /* If VSC multi adv commands are available, advertising will be initialized
    * when capabilities are read. If they are not available, initialize
    * advertising here */
@@ -409,7 +413,7 @@ void BTA_dm_on_hw_on() {
   /* Set controller features even if vendor support is not included */
   if (bta_dm_cb.p_sec_cback)
     bta_dm_cb.p_sec_cback(BTA_DM_LE_FEATURES_READ, NULL);
-#endif
+}
 
   btm_ble_scanner_init();
 

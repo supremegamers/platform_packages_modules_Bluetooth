@@ -41,6 +41,7 @@
 #include "main/shim/shim.h"
 #include "osi/include/log.h"
 #include "osi/include/osi.h"  // UNUSED_ATTR
+#include "osi/include/properties.h"
 #include "stack/acl/acl.h"
 #include "stack/btm/btm_ble_int.h"
 #include "stack/btm/btm_ble_int_types.h"
@@ -83,6 +84,10 @@ extern const tBLE_BD_ADDR convert_to_address_with_type(
 #endif
 
 #define BTM_VSC_CHIP_CAPABILITY_RSP_LEN_S_RELEASE 25
+
+#ifndef PROPERTY_BLE_VND_SUPPORTED
+#define PROPERTY_BLE_VND_SUPPORTED "bluetooth.core.le.vendor_capabilities.enabled"
+#endif
 
 namespace {
 
@@ -637,6 +642,10 @@ static void btm_ble_vendor_capability_vsc_cmpl_cback(
     tBTM_VSC_CMPL* p_vcs_cplt_params) {
   BTM_TRACE_DEBUG("%s", __func__);
 
+  if (!osi_property_get_bool(PROPERTY_BLE_VND_SUPPORTED, true)) {
+  return;
+}
+
   /* Check status of command complete event */
   CHECK(p_vcs_cplt_params->opcode == HCI_BLE_VENDOR_CAP);
   CHECK(p_vcs_cplt_params->param_len > 0);
@@ -768,13 +777,18 @@ void BTM_BleGetDynamicAudioBuffer(
  ******************************************************************************/
 #if (BLE_VND_INCLUDED == TRUE)
 void BTM_BleReadControllerFeatures(tBTM_BLE_CTRL_FEATURES_CBACK* p_vsc_cback) {
-  if (btm_cb.cmn_ble_vsc_cb.values_read) return;
+  if (osi_property_get_bool(PROPERTY_BLE_VND_SUPPORTED, true)) {
+      if (btm_cb.cmn_ble_vsc_cb.values_read) return;
 
-  BTM_TRACE_DEBUG("BTM_BleReadControllerFeatures");
+      BTM_TRACE_DEBUG("BTM_BleReadControllerFeatures");
 
-  p_ctrl_le_feature_rd_cmpl_cback = p_vsc_cback;
-  BTM_VendorSpecificCommand(HCI_BLE_VENDOR_CAP, 0, NULL,
-                            btm_ble_vendor_capability_vsc_cmpl_cback);
+      p_ctrl_le_feature_rd_cmpl_cback = p_vsc_cback;
+      BTM_VendorSpecificCommand(HCI_BLE_VENDOR_CAP, 0, NULL,
+                                btm_ble_vendor_capability_vsc_cmpl_cback);
+  } else {
+    UNUSED(p_vsc_cback);
+    return;
+  }
 }
 #else
 void BTM_BleReadControllerFeatures(
@@ -3505,9 +3519,9 @@ void btm_ble_init(void) {
       alarm_new("btm_ble_addr.refresh_raddr_timer");
   btm_ble_pa_sync_cb = {};
   sync_timeout_alarm = alarm_new("btm.sync_start_task");
-#if (BLE_VND_INCLUDED == FALSE)
-  btm_ble_adv_filter_init();
-#endif
+if (osi_property_get_bool(PROPERTY_BLE_VND_SUPPORTED, true)) {
+      btm_ble_adv_filter_init();
+    }
 }
 
 // Clean up btm ble control block
